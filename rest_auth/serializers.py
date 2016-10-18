@@ -136,6 +136,14 @@ class JWTSerializer(serializers.Serializer):
     """
     token = serializers.CharField()
     user = UserDetailsSerializer()
+	
+	
+class UserTokenSerializer(serializers.Serializer):
+    """
+    Serializer for Username and token display.
+    """
+    username = serializers.CharField()
+    key = serializers.CharField()
 
 
 class PasswordResetSerializer(serializers.Serializer):

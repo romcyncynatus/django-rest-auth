@@ -11,5 +11,5 @@ def is_lazy_user(user):
         return True
 
     # Otherwise, we have to fall back to checking the database.
-    from lazysignup.models import LazyUser
+    from rest_auth.registration.lazyregistration.models import LazyUser
     return bool(LazyUser.objects.filter(user=user).count() > 0)

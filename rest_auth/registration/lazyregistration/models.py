@@ -1,4 +1,3 @@
-import re
 import uuid
 
 from django.conf import settings
@@ -70,7 +69,7 @@ class LazyUserManager(models.Manager):
 
         The converted ``User`` object is returned.
 
-        Raises a LazyError if the user is not lazy.
+        Raises a NotLazyError if the user is not lazy.
         """
         if not is_lazy_user(lazy_user):
             raise NotLazyError('You cannot convert a non-lazy user')

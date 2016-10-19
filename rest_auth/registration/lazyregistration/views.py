@@ -1,27 +1,20 @@
-from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from rest_framework.generics import GenericAPIView
 from rest_framework.generics import CreateAPIView
 from rest_framework import status
 from rest_framework import serializers
 
-from allauth.account.adapter import get_adapter
-from allauth.account.views import ConfirmEmailView
 from allauth.account.utils import complete_signup
-from allauth.account import app_settings as allauth_settings
+
+from rest_auth.views import LoginView
+from rest_auth.registration.views import RegisterView
+from rest_auth.models import TokenModel
 
 from rest_auth.app_settings import (TokenSerializer,
                                     JWTSerializer,
                                     create_token)
-from rest_auth.registration.serializers import (SocialLoginSerializer,
-                                                VerifyEmailSerializer)
-from rest_auth.views import LoginView
-from rest_auth.registration.views import RegisterView
-from rest_auth.models import TokenModel
 
 from rest_auth.utils import jwt_encode
 

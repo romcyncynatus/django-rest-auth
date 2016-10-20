@@ -1,11 +1,4 @@
 from django.conf import settings
 
-from rest_auth.registration.serializers import (
-    RegisterSerializer as DefaultRegisterSerializer)
-from ...utils import import_callable
-
-
-serializers = getattr(settings, 'REST_AUTH_REGISTER_SERIALIZERS', {})
-
-RegisterSerializer = import_callable(
-    serializers.get('REGISTER_SERIALIZER', DefaultRegisterSerializer))
+# Lazy user timeout in seconds - defaults to two weeks
+LAZY_USER_TIMEOUT = getattr(settings, 'REST_AUTH_LAZY_USER_TIMEOUT', 1209600)

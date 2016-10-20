@@ -1,7 +1,7 @@
-import datetime
-from django.conf import settings
+from django.utils import timezone
 from django.contrib import admin
 from .models import LazyUser
+from .app_settings import LAZY_USER_TIMEOUT
 
 
 @admin.register(LazyUser)
@@ -10,8 +10,7 @@ class LazyUserAdmin(admin.ModelAdmin):
     actions = ('cleanup_lazyusers',)
 
     def cleanup_lazyusers(self, request, queryset):
-        delete_before = datetime.datetime.now() - datetime.timedelta(
-            seconds=settings.SESSION_COOKIE_AGE)
+        delete_before = timezone.now() - timezone.timedelta(seconds=LAZY_USER_TIMEOUT)
         old_users = queryset.filter(user__last_login__lt=delete_before)
         count = old_users.count()
 
@@ -23,6 +22,5 @@ class LazyUserAdmin(admin.ModelAdmin):
 
     cleanup_lazyusers.short_description = (
         'Delete selected lazy users and unconverted users older than {}'.format(
-            datetime.timedelta(seconds=settings.SESSION_COOKIE_AGE)
-        )
+            timezone.timedelta(seconds=LAZY_USER_TIMEOUT))
     )

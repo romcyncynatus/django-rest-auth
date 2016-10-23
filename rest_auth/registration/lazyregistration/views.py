@@ -9,7 +9,8 @@ from rest_framework import serializers
 from allauth.account.utils import complete_signup
 
 from rest_auth.views import LoginView
-from rest_auth.registration.views import RegisterView
+from rest_auth.registration.views import (RegisterView,
+                                          SocialLoginView)
 from rest_auth.models import TokenModel
 
 from rest_auth.app_settings import (TokenSerializer,
@@ -20,7 +21,7 @@ from rest_auth.utils import jwt_encode
 
 # Lazy registration
 from rest_auth.registration.lazyregistration.models import LazyUser
-from rest_auth.registration.lazyregistration.permissions import IsLazyUser
+from rest_auth.registration.lazyregistration.utils import is_lazy_user
 
 class LazyUserCreateView(CreateAPIView):
     serializer_class = serializers.Serializer
@@ -54,40 +55,44 @@ class LazyUserCreateView(CreateAPIView):
 
 
 class LazyUserLoginView(LoginView):
-    permission_classes = (IsLazyUser,)
+    permission_classes = (AllowAny,)
 
     def __init__(self):
         super(LazyUserLoginView, self).__init__()
 
-        self.lazy_user = None
+        # This user will usually be 'AnonymousUser', but in case this is a lazy user
+        # we will have to convert it
+        self.previous_user = None
         self.user = None
 
     def post(self, request, *args, **kwargs):
-        # Store the lazy user
-        self.lazy_user = request.user
+        # Store the current (maybe lazy) user
+        self.previous_user = request.user
 
         # Call original post function (after which self.user should be populated)
         response = super(LazyUserLoginView, self).post(request, *args, **kwargs)
 
-        # Now we should have both the request (lazy) user and the newly created user,
-        # so we can convert our lazy user.
-        LazyUser.objects.convert(self.lazy_user, self.user)
+        # In case the previous user is lazy, convert it
+        if is_lazy_user(self.previous_user):
+            LazyUser.objects.convert(self.previous_user, self.user)
 
         return response
 
 
 class LazyUserRegisterView(RegisterView):
-    permission_classes = (IsLazyUser,)
+    permission_classes = (AllowAny,)
 
     def __init__(self):
         super(LazyUserRegisterView, self).__init__()
 
-        self.lazy_user = None
+        # This user will usually be 'AnonymousUser', but in case this is a lazy user
+        # we will have to convert it
+        self.previous_user = None
         self.user = None
 
     def create(self, request, *args, **kwargs):
         # Store the lazy user
-        self.lazy_user = request.user
+        self.previous_user = request.user
 
         # Call original create function
         return super(LazyUserRegisterView, self).create(request, *args, **kwargs)
@@ -96,8 +101,13 @@ class LazyUserRegisterView(RegisterView):
         # Call the original perform_create (after which the new user will get created)
         self.user = super(LazyUserRegisterView, self).perform_create(serializer)
 
-        # Now we should have both the request (lazy) user and the newly created user,
-        # so we can convert our lazy user.
-        LazyUser.objects.convert(self.lazy_user, self.user)
+        # In case the previous user is lazy, convert it
+        if is_lazy_user(self.previous_user):
+            LazyUser.objects.convert(self.previous_user, self.user)
 
         return self.user
+
+
+# TODO: Test that this inheritance trick indeed works to create a lazy user social login
+class LazyUserSocialLoginView(LazyUserLoginView, SocialLoginView):
+    pass
